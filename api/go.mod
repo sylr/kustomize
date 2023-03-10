@@ -18,6 +18,8 @@ require (
 
 require (
 	filippo.io/age v1.1.1
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
+	github.com/mitchellh/go-homedir v1.1.0
 	sylr.dev/yaml/age/v3 v3.0.0-20221203152643-412e9df4c040
 	sylr.dev/yaml/v3 v3.0.0-20220527135632-500fddf2b049
 )
