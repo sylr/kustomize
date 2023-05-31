@@ -188,8 +188,9 @@ func (kvl *loader) keyValuesFromFileSources(sources []string, ids []age.Identity
 		}
 		if strings.HasSuffix(fPath, ".age") {
 			k = strings.TrimSuffix(k, ".age")
+			fPath = strings.TrimSuffix(fPath, ".age")
 
-			if (strings.HasSuffix(k, ".yaml") || strings.HasSuffix(k, ".yml")) &&
+			if (strings.HasSuffix(fPath, ".yaml") || strings.HasSuffix(fPath, ".yml")) &&
 				!bytes.HasPrefix(content, []byte(armor.Header)) {
 				// If key has .yaml or .yml extension and has no age armor header
 				// then we try inline decrypting of the file.
