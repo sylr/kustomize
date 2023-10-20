@@ -161,8 +161,8 @@ func (p *plugin) runHelmCommand(
 		helm := p.h.GeneralConfig().HelmConfig.Command
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
-				"unable to run: '%s %s' with env=%s (is '%s' installed?)",
-				helm, strings.Join(args, " "), env, helm),
+				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
+				helm, strings.Join(args, " "), env, helm, err),
 			stderr.String(),
 		)
 	}
@@ -268,15 +268,18 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 	// helm may produce messages to stdout before it
 	r := &kio.ByteReader{Reader: bytes.NewBufferString(string(stdout)), OmitReaderAnnotations: true}
 	nodes, err := r.Read()
+	if err != nil {
+		return nil, fmt.Errorf("error reading helm output: %w", err)
+	}
 
 	if len(nodes) != 0 {
 		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w\n", err)
+			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
 		}
 		return rm, nil
 	}
-	return nil, fmt.Errorf("could not parse bytes into resource map: %w\n", resMapErr)
+	return nil, fmt.Errorf("could not parse bytes into resource map: %w", resMapErr)
 }
 
 func (p *plugin) pullCommand() []string {
@@ -284,8 +287,18 @@ func (p *plugin) pullCommand() []string {
 		"pull",
 		"--untar",
 		"--untardir", p.absChartHome(),
-		"--repo", p.Repo,
-		p.Name}
+	}
+
+	switch {
+	case strings.HasPrefix(p.Repo, "oci://"):
+		args = append(args, strings.TrimSuffix(p.Repo, "/")+"/"+p.Name)
+	case p.Repo != "":
+		args = append(args, "--repo", p.Repo)
+		fallthrough
+	default:
+		args = append(args, p.Name)
+	}
+
 	if p.Version != "" {
 		args = append(args, "--version", p.Version)
 	}

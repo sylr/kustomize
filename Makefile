@@ -3,7 +3,7 @@
 #
 # Makefile for kustomize CLI and API.
 
-LATEST_V4_RELEASE=v4.5.7
+LATEST_RELEASE=v5.1.1
 
 SHELL := /usr/bin/env bash
 GOOS = $(shell go env GOOS)
@@ -100,18 +100,21 @@ verify-kustomize-repo: \
 	build-non-plugin-all \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-v4-release
+	test-examples-kustomize-against-latest-release
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
 	install-tools \
+	workspace-sync \
+	generate-kustomize-builtin-plugins \
+	builtin-plugins-diff \
 	test-unit-kustomize-plugins \
 	test-go-mod \
 	build-non-plugin-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-v4-release
+	test-examples-kustomize-against-latest-release
 
 .PHONY: license
 license: $(MYGOBIN)/addlicense
@@ -125,6 +128,14 @@ check-license: $(MYGOBIN)/addlicense
 lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
+.PHONY: apidiff
+apidiff: go-apidiff ## Run the go-apidiff to verify any API differences compared with origin/master
+	$(GOBIN)/go-apidiff master --compare-imports --print-compatible --repo-path=.
+
+.PHONY: go-apidiff
+go-apidiff:
+	go install github.com/joelanford/go-apidiff@v0.6.0
+
 .PHONY: test-unit-all
 test-unit-all: \
 	test-unit-non-plugin \
@@ -133,11 +144,11 @@ test-unit-all: \
 # This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
 test-unit-non-plugin:
-	./hack/for-each-module.sh "make test" "./plugin/*" 15
+	./hack/for-each-module.sh "make test" "./plugin/*" 16
 
 .PHONY: build-non-plugin-all
 build-non-plugin-all:
-	./hack/for-each-module.sh "make build" "./plugin/*" 15
+	./hack/for-each-module.sh "make build" "./plugin/*" 16
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
@@ -152,7 +163,7 @@ functions-examples-all:
 	done
 
 test-go-mod:
-	./hack/for-each-module.sh "\$$KUSTOMIZE_ROOT/hack/with-unpinned-kust-dev.sh 'go mod tidy -v'"
+	./hack/for-each-module.sh "go mod tidy -v"
 
 .PHONY:
 verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
@@ -169,18 +180,15 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-kustomize-against-v4-release: $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh v4@$(LATEST_V4_RELEASE)
+test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
+	./hack/testExamplesAgainstKustomize.sh v5@$(LATEST_RELEASE)
 
-# --- Kustomize targets ---
-.PHONY: kustomize
-kustomize:
-	make -C ./kustomize build
-
-.PHONY: kustomize-crossbuild
-kustomize-crossbuild:
-	make -C ./kustomize crossbuild
-
+# Pushes dependencies in the go.work file back to go.mod files of each workspace module.
+.PHONY: workspace-sync
+workspace-sync:
+	go work sync
+	./hack/doGoMod.sh tidy
+	
 # --- Cleanup targets ---
 .PHONY: clean
 clean: clean-kustomize-external-go-plugin uninstall-tools

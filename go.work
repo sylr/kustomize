@@ -1,4 +1,4 @@
-go 1.19
+go 1.20
 
 use (
 	./api
@@ -10,6 +10,7 @@ use (
 	./cmd/mdtogo
 	./cmd/pluginator
 	./functions/examples/application-cr/image
+	./functions/examples/fn-framework-application
 	./functions/examples/injection-tshirt-sizes/image
 	./functions/examples/template-go-nginx/image
 	./functions/examples/validator-kubeval/image
@@ -45,5 +46,4 @@ use (
 	./plugin/someteam.example.com/v1/stringprefixer
 	./plugin/someteam.example.com/v1/validator
 	./plugin/untested/v1/gogetter
-	./site
 )
