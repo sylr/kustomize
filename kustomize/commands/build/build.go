@@ -120,6 +120,7 @@ func NewCmdBuild(
 
 	AddFlagEnableHelm(cmd.Flags())
 	AddFlagNoAGE(cmd.Flags())
+	AddFlagAGEIdentities(cmd.Flags())
 	AddFlagNotInterractive(cmd.Flags())
 	return cmd
 }

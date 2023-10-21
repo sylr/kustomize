@@ -24,8 +24,9 @@ import (
 )
 
 var (
-	NotInteractive  = true
-	NoAgeDecryption = false
+	NotInteractive   = true
+	NoAgeDecryption  = false
+	AgeIdentityFiles = make([]string, 0)
 )
 
 var utf8bom = []byte{0xEF, 0xBB, 0xBF}
@@ -85,8 +86,8 @@ func (kvl *loader) getAgeIdentities(sources []string) ([]age.Identity, error) {
 		return ids, nil
 	}
 
-	if len(sources) > 0 {
-		for _, path := range sources {
+	if len(sources) > 0 || len(AgeIdentityFiles) > 0 {
+		for _, path := range append(AgeIdentityFiles, sources...) {
 			path, err := filepath.Abs(os.ExpandEnv(path))
 			if err != nil {
 				return nil, err
@@ -98,7 +99,9 @@ func (kvl *loader) getAgeIdentities(sources []string) ([]age.Identity, error) {
 			fd := bytes.NewBuffer(content)
 			id, err := age.ParseIdentities(fd)
 			if err != nil {
-				return nil, err
+				if id, err = parseSSHIdentity(path, content); err != nil {
+					continue
+				}
 			}
 			ids = append(ids, id...)
 		}

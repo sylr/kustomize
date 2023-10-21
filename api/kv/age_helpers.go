@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"sync"
 
@@ -148,7 +147,7 @@ Use a file for which the corresponding ".pub" file exists, or convert the privat
 Ensure %q exists, or convert the private key %q to a modern format with "ssh-keygen -p -m RFC4716"`, name, err, name+".pub", name)
 	}
 	defer f.Close()
-	contents, err := ioutil.ReadAll(f)
+	contents, err := io.ReadAll(f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %q: %v", name+".pub", err)
 	}
