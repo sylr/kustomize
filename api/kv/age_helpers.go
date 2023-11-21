@@ -18,9 +18,11 @@ import (
 	"sylr.dev/yaml/v3"
 )
 
+type ageIdentityFiles map[string]age.Identity
 type ageIdentityCache map[[sha256.Size]byte]age.Identity
 
 var (
+	sshAgeIdentityFiles        ageIdentityFiles = make(ageIdentityFiles)
 	sshAgeIdentitiesCache      ageIdentityCache = make(ageIdentityCache)
 	sshAgeIdentitiesCacheMutex sync.RWMutex     = sync.RWMutex{}
 )
@@ -130,7 +132,7 @@ func parseSSHIdentity(name string, pemBytes []byte) ([]age.Identity, error) {
 	// Only cache keys in interactive mode because we probably don't want to keep
 	// in memory unlocked ssh private keys.
 	if !NotInteractive {
-		addSSHAgeIdentityToCache(pemBytes, id)
+		addSSHAgeIdentityToCache(name, pemBytes, id)
 	}
 
 	return []age.Identity{id}, nil
@@ -176,6 +178,17 @@ func readPassphrase() ([]byte, error) {
 	return p, nil
 }
 
+func getSSHAgeIdentityFromCacheByPath(path string) age.Identity {
+	sshAgeIdentitiesCacheMutex.RLock()
+	defer sshAgeIdentitiesCacheMutex.RUnlock()
+
+	if id, ok := sshAgeIdentityFiles[path]; ok {
+		return id
+	}
+
+	return nil
+}
+
 func getSSHAgeIdentityFromCache(pemBytes []byte) age.Identity {
 	sha256 := sha256.Sum256(pemBytes)
 
@@ -189,11 +202,12 @@ func getSSHAgeIdentityFromCache(pemBytes []byte) age.Identity {
 	return nil
 }
 
-func addSSHAgeIdentityToCache(pemBytes []byte, id age.Identity) {
+func addSSHAgeIdentityToCache(name string, pemBytes []byte, id age.Identity) {
 	sha256 := sha256.Sum256(pemBytes)
 
 	sshAgeIdentitiesCacheMutex.Lock()
 	defer sshAgeIdentitiesCacheMutex.Unlock()
 
 	sshAgeIdentitiesCache[sha256] = id
+	sshAgeIdentityFiles[name] = id
 }

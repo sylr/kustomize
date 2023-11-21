@@ -88,6 +88,11 @@ func (kvl *loader) getAgeIdentities(sources []string) ([]age.Identity, error) {
 
 	if len(sources) > 0 || len(AgeIdentityFiles) > 0 {
 		for _, path := range append(AgeIdentityFiles, sources...) {
+			if id := getSSHAgeIdentityFromCacheByPath(path); id != nil {
+				ids = append(ids, id)
+				continue
+			}
+
 			path, err := filepath.Abs(os.ExpandEnv(path))
 			if err != nil {
 				return nil, err
@@ -154,6 +159,7 @@ func (kvl *loader) getAgeIdentities(sources []string) ([]age.Identity, error) {
 
 func keyValuesFromLiteralSources(sources []string, ids []age.Identity) ([]types.Pair, error) {
 	var kvs []types.Pair
+
 	for _, s := range sources {
 		k, v, err := parseLiteralSource(s)
 		if err != nil {
@@ -179,6 +185,7 @@ func keyValuesFromLiteralSources(sources []string, ids []age.Identity) ([]types.
 
 func (kvl *loader) keyValuesFromFileSources(sources []string, ids []age.Identity) ([]types.Pair, error) {
 	var kvs []types.Pair
+
 	for _, s := range sources {
 		k, fPath, err := generators.ParseFileSource(s)
 		if err != nil {
