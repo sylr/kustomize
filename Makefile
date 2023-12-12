@@ -3,7 +3,7 @@
 #
 # Makefile for kustomize CLI and API.
 
-LATEST_RELEASE=v5.1.1
+LATEST_RELEASE=v5.2.1
 
 SHELL := /usr/bin/env bash
 GOOS = $(shell go env GOOS)
@@ -144,11 +144,11 @@ test-unit-all: \
 # This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
 test-unit-non-plugin:
-	./hack/for-each-module.sh "make test" "./plugin/*" 16
+	./hack/for-each-module.sh "make test" "./plugin/*" 19
 
 .PHONY: build-non-plugin-all
 build-non-plugin-all:
-	./hack/for-each-module.sh "make build" "./plugin/*" 16
+	./hack/for-each-module.sh "make build" "./plugin/*" 19
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:

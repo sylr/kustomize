@@ -3,8 +3,8 @@ module sigs.k8s.io/kustomize/plugin/builtin/imagetagtransformer
 go 1.20
 
 require (
-	sigs.k8s.io/kustomize/api v0.15.0
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/kustomize/api v0.16.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
@@ -30,8 +30,7 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/evanphx/json-patch.v5 v5.6.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.15.0 // indirect
+	sigs.k8s.io/kustomize/kyaml v0.16.0 // indirect
 )
