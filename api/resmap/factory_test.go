@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	loader "sigs.k8s.io/kustomize/api/internal/loader"
 	"sigs.k8s.io/kustomize/api/kv"
@@ -65,19 +66,19 @@ metadata:
 				"namespace": "test",
 			}}).ResMap()
 	expYaml, err := expected.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	fSys := filesys.MakeFsInMemory()
-	assert.NoError(t, fSys.WriteFile("deployment.yaml", []byte(resourceStr)))
+	require.NoError(t, fSys.WriteFile("deployment.yaml", []byte(resourceStr)))
 
 	ldr, err := loader.NewLoader(
 		loader.RestrictionRootOnly, filesys.Separator, fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	m, err := rmF.FromFile(ldr, "deployment.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	mYaml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expYaml, mYaml)
 }
 
@@ -106,11 +107,11 @@ metadata:
 				"name": "cm2",
 			}}).ResMap()
 	expYaml, err := expected.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	m, err := rmF.NewResMapFromBytes(encoded)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	mYaml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expYaml, mYaml)
 }
 
@@ -223,13 +224,13 @@ BAR=baz
 			}
 		}
 		r, err := rmF.NewResMapFromConfigMapArgs(kvLdr, tc.input)
-		assert.NoError(t, err, tc.description)
+		require.NoError(t, err, tc.description)
 		r.RemoveBuildAnnotations()
 		rYaml, err := r.AsYaml()
-		assert.NoError(t, err, tc.description)
+		require.NoError(t, err, tc.description)
 		tc.expected.RemoveBuildAnnotations()
 		expYaml, err := tc.expected.AsYaml()
-		assert.NoError(t, err, tc.description)
+		require.NoError(t, err, tc.description)
 		assert.Equal(t, expYaml, rYaml)
 	}
 }
@@ -261,7 +262,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expected := resmaptest_test.NewRmBuilder(t, rf).Add(
 		map[string]interface{}{
@@ -277,7 +278,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 			},
 		}).ResMap()
 	expYaml, err := expected.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, string(expYaml), string(actYaml))
 }

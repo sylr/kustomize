@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	. "sigs.k8s.io/kustomize/api/internal/target"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/pkg/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -285,15 +287,15 @@ metadata:
 	}
 	expected.RemoveBuildAnnotations()
 	expYaml, err := expected.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	kt := makeKustTargetWithRf(t, th.GetFSys(), "/whatever", pvd)
-	assert.NoError(t, kt.Load())
+	require.NoError(t, kt.Load())
 	actual, err := kt.MakeCustomizedResMap()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, string(expYaml), string(actYaml))
 }
 
@@ -313,19 +315,21 @@ configurations:
 	th.WriteF("/merge-config/name-prefix-rules.yaml", `
 namePrefix:
 - path: metadata/name
-  apiVersion: v1
+  group: apps
+  version: v1
   kind: Deployment
 - path: metadata/name
-  apiVersion: v1
+  version: v1
   kind: Secret
 `)
 	th.WriteF("/merge-config/name-suffix-rules.yaml", `
 nameSuffix:
 - path: metadata/name
-  apiVersion: v1
+  version: v1
   kind: ConfigMap
 - path: metadata/name
-  apiVersion: v1
+  group: apps
+  version: v1
   kind: Deployment
 `)
 	th.WriteF("/merge-config/deployment.yaml", `
@@ -423,7 +427,7 @@ func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
     configPath: another_config.json
 `)
 	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/generator").AccumulateTarget()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ManifestGenerator.v1.generators.example/ManifestGenerator")
 }
 
@@ -452,6 +456,83 @@ func TestDuplicateExternalTransformersForbidden(t *testing.T) {
   value: 'fail'
 `)
 	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/transformer").AccumulateTarget()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ValueAnnotator.v1.transformers.example.co/notImportantHere")
+}
+
+func TestErrorMessageForMalformedYAML(t *testing.T) {
+	// These testcases verify behavior for the scenario described in
+	// https://github.com/kubernetes-sigs/kustomize/issues/5540 .
+
+	testcases := map[string]struct {
+		loaderNewReturnsError error
+		shouldShowLoadError   bool
+	}{
+		"shouldShowLoadError": {
+			loaderNewReturnsError: utils.NewErrTimeOut(time.Second, "git init"),
+			shouldShowLoadError:   true,
+		},
+		"shouldNotShowLoadError": {
+			loaderNewReturnsError: NewErrMissingKustomization("/should-fail/resources.yaml"),
+			shouldShowLoadError:   false,
+		},
+	}
+
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/should-fail/kustomization.yaml", `resources:
+- resources.yaml
+`)
+	th.WriteF("/should-fail/resources.yaml", `<!DOCTYPE html>
+<html class="html-devise-layout ui-light-gray" lang="en">
+<head prefix="og: http://ogp.me/ns#">
+<meta charset="utf-8">
+`)
+
+	for name, tc := range testcases {
+		t.Run(name, func(subT *testing.T) {
+			ldrWrapper := func(baseLoader ifc.Loader) ifc.Loader {
+				return loaderNewThrowsError{
+					baseLoader:      baseLoader,
+					newReturnsError: tc.loaderNewReturnsError,
+				}
+			}
+			_, err := makeAndLoadKustTargetWithLoaderOverride(t, th.GetFSys(), "/should-fail", ldrWrapper).AccumulateTarget()
+			require.Error(t, err)
+			errString := err.Error()
+			assert.Contains(t, errString, "accumulating resources from 'resources.yaml'")
+			assert.Contains(t, errString, "MalformedYAMLError: yaml: line 3: mapping values are not allowed in this context")
+			if tc.shouldShowLoadError {
+				assert.Regexp(t, `hit \w+ timeout running '`, errString)
+			} else {
+				assert.NotRegexp(t, `hit \w+ timeout running '`, errString)
+			}
+		})
+	}
+}
+
+// loaderNewReturnsError duplicates baseLoader's behavior except
+// that New() returns the specified error.
+type loaderNewThrowsError struct {
+	baseLoader      ifc.Loader
+	newReturnsError error
+}
+
+func (l loaderNewThrowsError) Repo() string {
+	return l.baseLoader.Repo()
+}
+
+func (l loaderNewThrowsError) Root() string {
+	return l.baseLoader.Root()
+}
+
+func (l loaderNewThrowsError) New(_ string) (ifc.Loader, error) {
+	return nil, l.newReturnsError
+}
+
+func (l loaderNewThrowsError) Load(location string) ([]byte, error) {
+	return l.baseLoader.Load(location) //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func (l loaderNewThrowsError) Cleanup() error {
+	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
 }
