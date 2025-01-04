@@ -95,8 +95,7 @@ GO_BUILD_EXTLDFLAGS     := $(strip $(GO_BUILD_EXTLDFLAGS))
 GO_BUILD_TAGS           := $(strip $(GO_BUILD_TAGS))
 GO_BUILD_FLAGS          := $(strip $(GO_BUILD_FLAGS))
 GO_BUILD_LDFLAGS_OPTIMS := $(strip $(GO_BUILD_LDFLAGS_OPTIMS))
-GO_BUILD_LDFLAGS        := -ldflags '$(GO_BUILD_LDFLAGS_OPTIMS) -X sigs.k8s.io/kustomize/api/provenance.version=$(GIT_VERSION) \
--X sigs.k8s.io/kustomize/api/provenance.gitCommit=$(GIT_COMMIT) \
+GO_BUILD_LDFLAGS        := -ldflags '$(GO_BUILD_LDFLAGS_OPTIMS) -X sigs.k8s.io/kustomize/api/provenance.version=kustomize/$(GIT_VERSION) \
 -X sigs.k8s.io/kustomize/api/provenance.buildDate=$(shell date -u +%FT%TZ) -extldflags "$(GO_BUILD_EXTLDFLAGS)"'
 
 # ------------------------------------------------------------------------------
