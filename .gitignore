@@ -35,3 +35,4 @@ site/.hugo_build.lock
 
 # goreleaser artifacts
 **/dist/
+/output/

@@ -11,8 +11,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/kv"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/configmapsecret"
 )
+
+func init() {
+	kv.NoAgeDecryption = true
+}
 
 func TestFailureCasesEditSetSecret(t *testing.T) {
 	testCases := []testutils_test.FailureCase{
