@@ -13,9 +13,9 @@ import (
 	"filippo.io/age/armor"
 	"golang.org/x/crypto/ssh"
 
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/term"
 	yage "sylr.dev/yaml/age/v3"
-	"sylr.dev/yaml/v3"
 )
 
 type ageIdentityFiles map[string]age.Identity
