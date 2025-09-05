@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/kyaml
 go 1.22.7
 
 require (
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gnostic-models v0.6.9
 	github.com/google/go-cmp v0.6.0

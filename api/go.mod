@@ -4,14 +4,13 @@ go 1.22.7
 
 require (
 	github.com/blang/semver/v4 v4.0.0
-	github.com/carapace-sh/carapace-shlex v1.0.1
 	github.com/go-errors/errors v1.4.2
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/goleak v1.3.0
 	go.yaml.in/yaml/v2 v2.4.2
 	gopkg.in/evanphx/json-patch.v4 v4.12.0
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7
-	sigs.k8s.io/kustomize/kyaml v0.20.0
+	sigs.k8s.io/kustomize/kyaml v0.20.1
 	sigs.k8s.io/yaml v1.5.0
 )
 
@@ -27,7 +26,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
