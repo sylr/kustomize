@@ -12,6 +12,8 @@ func RecognizedKustomizationFileNames() []string {
 		"kustomization.yaml",
 		"kustomization.yml",
 		"Kustomization",
+		"_kustomization.yaml",
+		"_kustomization.yml",
 	}
 }
 
