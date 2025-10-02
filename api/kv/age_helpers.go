@@ -29,7 +29,11 @@ var (
 
 func decryptValueWithAge(value []byte, ids []age.Identity) ([]byte, error) {
 	if len(ids) == 0 {
-		return value, nil
+		if NoAgeDecryption {
+			return value, nil
+		} else {
+			return value, fmt.Errorf("no age identities available for decryption")
+		}
 	}
 
 	var r io.Reader
@@ -55,8 +59,10 @@ func decryptValueWithAge(value []byte, ids []age.Identity) ([]byte, error) {
 }
 
 func decryptInPlaceYAMLWithAge(value []byte, ids []age.Identity) ([]byte, error) {
-	if len(ids) == 0 {
+	if NoAgeDecryption {
 		return value, nil
+	} else {
+		return value, fmt.Errorf("no age identities available for decryption")
 	}
 
 	in := bytes.NewBuffer(value)
