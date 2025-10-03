@@ -82,6 +82,7 @@ func decryptInPlaceYAMLWithAge(value []byte, ids []age.Identity) ([]byte, error)
 	decoder := yaml.NewDecoder(in)
 	encoder := yaml.NewEncoder(out)
 	encoder.SetIndent(2)
+	encoder.CompactSeqIndent()
 
 	for {
 		err := decoder.Decode(&w)
