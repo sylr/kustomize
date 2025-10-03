@@ -3,6 +3,7 @@ package kv
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -31,8 +32,6 @@ func decryptValueWithAge(value []byte, ids []age.Identity) ([]byte, error) {
 	if len(ids) == 0 {
 		if NoAgeDecryption {
 			return value, nil
-		} else {
-			return value, fmt.Errorf("no age identities available for decryption")
 		}
 	}
 
@@ -46,6 +45,14 @@ func decryptValueWithAge(value []byte, ids []age.Identity) ([]byte, error) {
 
 	rd, err := age.Decrypt(r, ids...)
 	if err != nil {
+		if errors.Is(err, &age.NoIdentityMatchError{}) {
+			if NoAgeDecryption {
+				// No identities matched, but decryption is disabled, so just return the original content.
+				return value, nil
+			} else {
+				return value, err
+			}
+		}
 		return value, err
 	}
 	buf := new(bytes.Buffer)
@@ -61,8 +68,6 @@ func decryptValueWithAge(value []byte, ids []age.Identity) ([]byte, error) {
 func decryptInPlaceYAMLWithAge(value []byte, ids []age.Identity) ([]byte, error) {
 	if NoAgeDecryption {
 		return value, nil
-	} else {
-		return value, fmt.Errorf("no age identities available for decryption")
 	}
 
 	in := bytes.NewBuffer(value)
@@ -83,6 +88,13 @@ func decryptInPlaceYAMLWithAge(value []byte, ids []age.Identity) ([]byte, error)
 
 		if err == io.EOF {
 			break
+		} else if errors.Is(err, &age.NoIdentityMatchError{}) {
+			if NoAgeDecryption {
+				// No identities matched, but decryption is disabled, so just return the original content.
+				return value, nil
+			} else {
+				return value, err
+			}
 		} else if err != nil {
 			return value, err
 		}
