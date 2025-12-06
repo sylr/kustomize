@@ -174,7 +174,7 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 	}
 	root, err := filesys.ConfirmDir(fl.fSys, fl.root.Join(path))
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, ErrRtNotDir.Error()) //nolint:govet
+		return nil, errors.WrapPrefixf(err, "%s", ErrRtNotDir.Error())
 	}
 	if err = fl.errIfGitContainmentViolation(root); err != nil {
 		return nil, err
@@ -316,18 +316,17 @@ func (fl *FileLoader) httpClientGetContent(path string) ([]byte, error) {
 	} else {
 		hc = &http.Client{}
 	}
+	parsedURL, err := url.ParseRequestURI(path)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
 
-	u, err := url.Parse(path)
+	addAuthFromNetrc(parsedURL)
 	if err != nil {
 		return nil, err
 	}
 
-	addAuthFromNetrc(u)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := hc.Get(u.String())
+	resp, err := hc.Get(parsedURL.String())
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
